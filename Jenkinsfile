@@ -1,3 +1,4 @@
+
 pipeline {
     agent any
 
@@ -28,6 +29,9 @@ pipeline {
                 script {
                     env.IMAGE_TAG = "${env.BUILD_NUMBER}"
 
+                    echo "Building Docker image:"
+                    echo "${ECR_REPOSITORY}:${IMAGE_TAG}"
+
                     sh """
                         docker build \
                           -t ${ECR_REPOSITORY}:${IMAGE_TAG} \
@@ -39,29 +43,23 @@ pipeline {
 
         stage('Login to ECR') {
             steps {
-                withCredentials([
-                    usernamePassword(
-                        credentialsId: 'aws-ecr',
-                        usernameVariable: 'AWS_ACCESS_KEY_ID',
-                        passwordVariable: 'AWS_SECRET_ACCESS_KEY'
-                    )
-                ]) {
-                    sh '''
-                        export AWS_DEFAULT_REGION="${AWS_REGION}"
+                sh '''
+                    echo "Logging in to Amazon ECR..."
 
-                        aws ecr get-login-password \
-                          --region "${AWS_REGION}" | \
-                        docker login \
-                          --username AWS \
-                          --password-stdin "${ECR_REGISTRY}"
-                    '''
-                }
+                    aws ecr get-login-password \
+                      --region "${AWS_REGION}" | \
+                    docker login \
+                      --username AWS \
+                      --password-stdin "${ECR_REGISTRY}"
+                '''
             }
         }
 
         stage('Push Docker Image') {
             steps {
                 sh '''
+                    echo "Pushing Docker image..."
+
                     docker push "${ECR_REPOSITORY}:${IMAGE_TAG}"
                 '''
             }
@@ -70,10 +68,13 @@ pipeline {
         stage('Update Helm Image Tag') {
             steps {
                 sh '''
+                    echo "Updating Helm image tag to ${IMAGE_TAG}..."
+
                     sed -i -E 's/^  tag: .*/  tag: "'${IMAGE_TAG}'"/' \
                       helm/sample-app/values.yaml
 
-                    echo "Updated Helm image tag:"
+                    echo ""
+                    echo "Updated Helm image configuration:"
                     grep -A3 '^image:' helm/sample-app/values.yaml
                 '''
             }
@@ -89,6 +90,8 @@ pipeline {
                     )
                 ]) {
                     sh '''
+                        echo "Committing GitOps change..."
+
                         git config user.name "Jenkins"
                         git config user.email "jenkins@localhost"
 
@@ -99,6 +102,8 @@ pipeline {
 
                         git config credential.helper \
                           '!f() { echo username='${GIT_USERNAME}'; echo password='${GIT_TOKEN}'; }; f'
+
+                        echo "Pushing GitOps change to GitHub..."
 
                         git push origin HEAD:main
 
