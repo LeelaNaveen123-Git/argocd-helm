@@ -1,4 +1,4 @@
-﻿replicaCount: 6
+﻿replicaCount: 5
 
 image:
   repository: 565905129126.dkr.ecr.ap-south-1.amazonaws.com/sample-app
