@@ -3,6 +3,7 @@ pipeline {
 
     environment {
         AWS_REGION = 'ap-south-1'
+        ECR_REGISTRY = '565905129126.dkr.ecr.ap-south-1.amazonaws.com'
         ECR_REPOSITORY = '565905129126.dkr.ecr.ap-south-1.amazonaws.com/sample-app'
     }
 
@@ -38,20 +39,30 @@ pipeline {
 
         stage('Login to ECR') {
             steps {
-                sh '''
-                    aws ecr get-login-password \
-                      --region ${AWS_REGION} | \
-                    docker login \
-                      --username AWS \
-                      --password-stdin ${ECR_REPOSITORY}
-                '''
+                withCredentials([
+                    usernamePassword(
+                        credentialsId: 'aws-ecr',
+                        usernameVariable: 'AWS_ACCESS_KEY_ID',
+                        passwordVariable: 'AWS_SECRET_ACCESS_KEY'
+                    )
+                ]) {
+                    sh '''
+                        export AWS_DEFAULT_REGION="${AWS_REGION}"
+
+                        aws ecr get-login-password \
+                          --region "${AWS_REGION}" | \
+                        docker login \
+                          --username AWS \
+                          --password-stdin "${ECR_REGISTRY}"
+                    '''
+                }
             }
         }
 
         stage('Push Docker Image') {
             steps {
                 sh '''
-                    docker push ${ECR_REPOSITORY}:${IMAGE_TAG}
+                    docker push "${ECR_REPOSITORY}:${IMAGE_TAG}"
                 '''
             }
         }
@@ -62,6 +73,7 @@ pipeline {
                     sed -i -E 's/^  tag: .*/  tag: "'${IMAGE_TAG}'"/' \
                       helm/sample-app/values.yaml
 
+                    echo "Updated Helm image tag:"
                     grep -A3 '^image:' helm/sample-app/values.yaml
                 '''
             }
@@ -69,16 +81,30 @@ pipeline {
 
         stage('Commit and Push GitOps Change') {
             steps {
-                sh '''
-                    git config user.name "Jenkins"
-                    git config user.email "jenkins@localhost"
+                withCredentials([
+                    usernamePassword(
+                        credentialsId: 'github-token',
+                        usernameVariable: 'GIT_USERNAME',
+                        passwordVariable: 'GIT_TOKEN'
+                    )
+                ]) {
+                    sh '''
+                        git config user.name "Jenkins"
+                        git config user.email "jenkins@localhost"
 
-                    git add helm/sample-app/values.yaml
+                        git add helm/sample-app/values.yaml
 
-                    git commit -m "Update sample-app image to ${IMAGE_TAG}" || true
+                        git commit \
+                          -m "Update sample-app image to ${IMAGE_TAG}" || true
 
-                    git push origin HEAD:main
-                '''
+                        git config credential.helper \
+                          '!f() { echo username='${GIT_USERNAME}'; echo password='${GIT_TOKEN}'; }; f'
+
+                        git push origin HEAD:main
+
+                        git config --unset credential.helper || true
+                    '''
+                }
             }
         }
     }
