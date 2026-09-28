@@ -16,7 +16,7 @@ spec:
         {{- include "sample-app.selectorLabels" . | nindent 8 }}
     spec:
       containers:
-        - name: {{ .Chart.Name }}
+        - name: sample-app
           image: "{{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}"
           imagePullPolicy: {{ .Values.image.pullPolicy }}
           ports:
@@ -24,19 +24,19 @@ spec:
               protocol: TCP
           readinessProbe:
             httpGet:
-              path: {{ .Values.probes.readiness.path }}
+              path: {{ .Values.ingress.healthCheckPath | default "/" }}
               port: {{ .Values.service.targetPort }}
-            initialDelaySeconds: {{ .Values.probes.readiness.initialDelaySeconds }}
-            periodSeconds: {{ .Values.probes.readiness.periodSeconds }}
+            initialDelaySeconds: 5
+            periodSeconds: 10
             timeoutSeconds: 2
             successThreshold: 1
             failureThreshold: 3
           livenessProbe:
             httpGet:
-              path: {{ .Values.probes.liveness.path }}
+              path: {{ .Values.ingress.healthCheckPath | default "/" }}
               port: {{ .Values.service.targetPort }}
-            initialDelaySeconds: {{ .Values.probes.liveness.initialDelaySeconds }}
-            periodSeconds: {{ .Values.probes.liveness.periodSeconds }}
+            initialDelaySeconds: 10
+            periodSeconds: 20
             timeoutSeconds: 2
             failureThreshold: 3
           resources:
