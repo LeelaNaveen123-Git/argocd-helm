@@ -4,7 +4,7 @@ replicaCount: 1
 # Container Image Registry (AWS ECR Target)
 image:
   repository: 565905129126.dkr.ecr.ap-south-1.amazonaws.com/sample-app
-  tag: "49"
+  tag: "50"
   pullPolicy: IfNotPresent
 
 # Core Networking Topology
