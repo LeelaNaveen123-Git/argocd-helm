@@ -20,6 +20,10 @@ ingress:
   scheme: internet-facing
   targetType: ip
   healthCheckPath: /health
+  # --- New Keys Added Below to Stop Argo CD Null Errors ---
+  listenPorts: '[{"HTTP":80}]'
+  healthCheckPort: traffic-port
+  successCodes: "200"
 
 # Compute Limits (Critical for Karpenter to properly spin up extra nodes!)
 resources:
