@@ -7,6 +7,11 @@ metadata:
     {{- include "sample-app.labels" . | nindent 4 }}
 spec:
   replicas: {{ .Values.replicaCount }}
+  # 🔄 FIXED: Deletes the old pod before spinning up the new one to stop the low-resource pending block
+  strategy:
+    type: Recreate
+  # 🧹 FIXED: Limits history tracking to clear out the old Rev 1 to Rev 7 clutter from the UI
+  revisionHistoryLimit: 2
   selector:
     matchLabels:
       {{- include "sample-app.selectorLabels" . | nindent 6 }}
