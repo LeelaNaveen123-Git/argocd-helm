@@ -4,14 +4,14 @@ metadata:
   name: {{ include "sample-app.fullname" . }}
   namespace: {{ .Release.Namespace }}
   annotations:
-    alb.ingress.kubernetes.io/scheme: {{ .Values.ingress.scheme | default "internet-facing" }}
-    alb.ingress.kubernetes.io/target-type: {{ .Values.ingress.targetType | default "ip" }}
-    alb.ingress.kubernetes.io/listen-ports: {{ .Values.ingress.listenPorts | default "[{\"HTTP\":80}]" | quote }}
-    alb.ingress.kubernetes.io/healthcheck-path: {{ .Values.ingress.healthCheckPath | default "/health" }}
-    alb.ingress.kubernetes.io/healthcheck-port: {{ .Values.ingress.healthCheckPort | default "traffic-port" | quote }}
-    alb.ingress.kubernetes.io/success-codes: {{ .Values.ingress.successCodes | default "200" | quote }}
+    alb.ingress.kubernetes.io/scheme: "internet-facing"
+    alb.ingress.kubernetes.io/target-type: "ip"
+    alb.ingress.kubernetes.io/listen-ports: '[{"HTTP":80}]'
+    alb.ingress.kubernetes.io/healthcheck-path: {{ .Values.ingress.healthCheckPath | default "/health" | quote }}
+    alb.ingress.kubernetes.io/healthcheck-port: "traffic-port"
+    alb.ingress.kubernetes.io/success-codes: "200"
 spec:
-  ingressClassName: {{ .Values.ingress.className | default "alb" }}
+  ingressClassName: "alb"
   rules:
     - http:
         paths:
