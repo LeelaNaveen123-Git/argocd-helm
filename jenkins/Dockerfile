@@ -25,7 +25,7 @@ RUN curl -fsSL -o /usr/local/bin/kubectl \
 RUN curl -fsSL https://raw.githubusercontent.com/helm/helm/main/scripts/get-helm-4 | bash
 
 # Docker Desktop exposes /var/run/docker.sock as root:rot.
-# Add Jenkins to the root group so it can access the Docker daemon.
+# Add Jenkins to the root group so it can access the Docer daemon.
 RUN usermod -aG root jenkins
 
 USER jenkins
