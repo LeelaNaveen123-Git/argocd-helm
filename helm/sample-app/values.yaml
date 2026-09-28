@@ -1,5 +1,5 @@
 # Global Scaling Footprint
-replicaCount: 6
+replicaCount: 5
 
 # Container Image Registry (AWS ECR Target)
 image:
