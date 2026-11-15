@@ -1,11 +1,10 @@
-
 pipeline {
     agent any
 
     environment {
-        AWS_REGION = 'ap-south-1'
-        ECR_REGISTRY = '565905129126.dkr.ecr.ap-south-1.amazonaws.com'
-        ECR_REPOSITORY = '565905129126.dkr.ecr.ap-south-1.amazonaws.com/sample-app'
+        AWS_REGION     = 'ap-south-1'
+        ECR_REGISTRY   = '://amazonaws.com'
+        ECR_REPOSITORY = '://amazonaws.com/sample-app'
     }
 
     stages {
@@ -24,6 +23,24 @@ pipeline {
             }
         }
 
+        stage('SonarQube Code Analysis') {
+            steps {
+                script {
+                    def scannerHome = tool 'SonarScanner'
+                    withSonarQubeEnv('SonarQube') {
+                        sh """
+                            ${scannerHome}/bin/sonar-scanner \
+                              -Dsonar.projectKey=sample-app \
+                              -Dsonar.projectName=sample-app \
+                              -Dsonar.sources=app \
+                              -Dsonar.exclusions=app/node_modules/** \
+                              -Dsonar.sourceEncoding=UTF-8
+                        """
+                    }
+                }
+            }
+        }
+
         stage('Build Docker Image') {
             steps {
                 script {
@@ -38,6 +55,22 @@ pipeline {
                           ./app
                     """
                 }
+            }
+        }
+
+        stage('Trivy Image Scan') {
+            steps {
+                sh """
+                    echo "Scanning Docker image with Trivy..."
+
+                    docker run --rm \
+                      -v /var/run/docker.sock:/var/run/docker.sock \
+                      aquasec/trivy:latest image \
+                      --severity HIGH,CRITICAL \
+                      --exit-code 0 \
+                      --format table \
+                      "${ECR_REPOSITORY}:${IMAGE_TAG}"
+                """
             }
         }
 
