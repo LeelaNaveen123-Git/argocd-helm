@@ -18,23 +18,26 @@ const server = http.createServer((req, res) => {
   }
 
   res.writeHead(200, {
-    "Content-Type": "text/html"
+    "Content-Type": "text/html; charset=utf-8"
   });
 
   res.end(`
     <!DOCTYPE html>
     <html>
       <head>
+        <meta charset="UTF-8" />
         <title>Sample GitOps Application</title>
+        <link href="https://googleapis.com" rel="stylesheet">
         <style>
           body {
-            font-family: Arial, sans-serif;
+            font-family: 'Poppins', sans-serif;
             text-align: center;
             margin-top: 100px;
           }
 
           h1 {
             color: #333;
+            font-weight: 700;
           }
 
           .box {
