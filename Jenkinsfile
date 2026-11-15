@@ -3,8 +3,8 @@ pipeline {
 
     environment {
         AWS_REGION     = 'ap-south-1'
-        ECR_REGISTRY   = '://amazonaws.com'
-        ECR_REPOSITORY = '://amazonaws.com/sample-app'
+        ECR_REGISTRY   = '565905129126.dkr.ecr.ap-south-1.amazonaws.com'
+        ECR_REPOSITORY = '565905129126.dkr.ecr.ap-south-1.amazonaws.com/sample-app'
     }
 
     stages {
